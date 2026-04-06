@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+recursive-include openclaw_gateway *.py
+include openclaw_gateway/py.typed
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude .DS_Store

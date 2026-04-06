@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openclaw-gateway"
+description = "Lightweight agent-to-agent message translation gateway"
+version = "0.1.0"
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Research Radar Team", email = "team@example.com" }
+]
+keywords = ["agents", "message-translation", "gateway", "llm", "autonomous"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+
+dependencies = [
+    "pydantic>=2.0.0",
+    "aiohttp>=3.8.0",
+    "typer>=0.9.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.20.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "mypy>=0.990",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/openclaw-gateway"
+Documentation = "https://github.com/example/openclaw-gateway/wiki"
+Repository = "https://github.com/example/openclaw-gateway.git"
+
+[project.scripts]
+openclaw-gateway = "openclaw_gateway.cli:app"
+
+[tool.setuptools]
+packages = ["openclaw_gateway", "openclaw_gateway.adapters"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+include = '\.pyi?$'
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
