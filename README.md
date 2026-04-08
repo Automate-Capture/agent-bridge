@@ -24,58 +24,89 @@ This system implements a robust MessageTranslationEngine utilizing Abstract Synt
 
 ## Quick Start
 
-First, install the package via pip:
+Install from source:
 
 ```bash
-pip install agent_bridge
+git clone https://github.com/Lumi-node/agent-bridge.git
+cd agent-bridge
+pip install -e ".[dev]"
 ```
 
-Then, initialize the gateway and process a message:
+Ingest a LangChain tool call and translate it to canonical format:
 
 ```python
-from openclaw_gateway.canonical_message import CanonicalMessage
+import asyncio
+import json
 from openclaw_gateway.adapters.langchain import LangChainAdapter
-from openclaw_gateway.cli import AgentBridgeCLI
+from openclaw_gateway.adapters.autogpt import AutoGPTAdapter
 
-# Initialize the adapter for a specific agent type
-langchain_adapter = LangChainAdapter()
+async def main():
+    # Create protocol adapters
+    langchain = LangChainAdapter(agent_id="my_langchain_agent")
+    autogpt = AutoGPTAdapter(agent_id="my_autogpt_agent")
 
-# Create a canonical message object
-canonical_msg = CanonicalMessage(
-    source_agent="LangChain",
-    payload={"action": "query", "parameters": {"topic": "weather"}}
-)
+    # Ingest a LangChain tool_calls message into canonical format
+    raw_msg = json.dumps({
+        "tool_calls": [{
+            "id": "call_abc123",
+            "function": "analyze_document",
+            "arguments": {
+                "document_id": "doc_001",
+                "format": "pdf",
+                "size": 1048576
+            }
+        }]
+    }).encode("utf-8")
 
-# Translate the canonical message to the target agent's format (e.g., AutoGPT)
-target_format_message = langchain_adapter.translate_to_target(canonical_msg)
+    canonical = await langchain.ingest(raw_msg)
+    print(f"Intent: {canonical.intent}")        # "analyze"
+    print(f"Payload: {canonical.payload}")       # {"document_id": "doc_001", ...}
 
-print(f"Translated Message: {target_format_message}")
+    # Translate canonical message out to AutoGPT task format
+    autogpt_bytes = await autogpt.egress(canonical)
+    print(f"AutoGPT format: {autogpt_bytes.decode()}")
+
+asyncio.run(main())
 ```
 
 ## What Can You Do?
 
 ### Dynamic Protocol Adaptation
-AgentBridge handles the complex translation layer between disparate agent communication standards. It uses recursive descent parsing and type-safe serialization to map complex structures reliably.
+AgentBridge handles the translation layer between disparate agent communication standards. Each adapter inherits from `ProtocolAdapter` and implements `ingest()` (raw bytes to canonical) and `egress()` (canonical to raw bytes).
 
 ```python
-# Example of schema mapping in action
-from openclaw_gateway.adapters.base import BaseAdapter
+from openclaw_gateway.adapters.base import ProtocolAdapter
+from openclaw_gateway.canonical_message import CanonicalMessage
 
-class CustomAgentAdapter(BaseAdapter):
-    def translate_to_target(self, canonical_msg: CanonicalMessage) -> dict:
-        # Custom logic to map canonical structure to proprietary format
-        return {"custom_field": canonical_msg.payload.get("action")}
+class CustomAdapter(ProtocolAdapter):
+    async def ingest(self, raw_message: bytes) -> CanonicalMessage:
+        # Parse your agent's native format into canonical
+        ...
+
+    async def egress(self, canonical: CanonicalMessage) -> bytes:
+        # Serialize canonical back to your agent's format
+        ...
+
+adapter = CustomAdapter(agent_id="my_agent", protocol_name="custom")
 ```
 
 ### Semantic Routing
-Messages are routed not just based on destination, but on their *meaning*. The canonical representation allows the gateway to inspect the intent of a message before forwarding it to the most appropriate downstream agent.
+The `ConversationRouter` routes messages based on pre-registered conversation routes with automatic cycle detection (Tarjan's SCC) and ordered fallback agents.
 
 ```python
-# Routing decision based on message content
-if canonical_msg.payload.get("action") == "query":
-    print("Routing to Information Retrieval Agent.")
-elif canonical_msg.payload.get("action") == "execute":
-    print("Routing to Action Executor Agent.")
+from openclaw_gateway.router import ConversationRouter
+
+router = ConversationRouter()
+router.register_route(
+    conversation_id="conv_123",
+    primary_agent="analyzer",
+    fallback_agents=["backup_analyzer"],
+    protocol="langchain",
+    timeout_ms=30000
+)
+
+result = router.get_route("conv_123", intent="analyze")
+print(f"Route to: {result.primary}, fallbacks: {result.fallbacks}")
 ```
 
 ## Architecture
@@ -95,17 +126,42 @@ graph TD
 ## API Reference
 
 **`openclaw_gateway.canonical_message.CanonicalMessage`**
-Represents the standardized, intermediate message format.
-*Signature:* `CanonicalMessage(source_agent: str, payload: dict)`
-*Example:* `CanonicalMessage("LangChain", {"action": "query", "parameters": {"topic": "weather"}})`
+Pydantic model for the standardized message format. All timestamps are unix floats internally, serialized to ISO-8601 for JSON. Message IDs must be UUID-v4. Critical payload fields are validated per intent type (`analyze`, `delegate`, `stream_result`).
 
-**`openclaw_gateway.adapters.base.BaseAdapter`**
-Abstract base class defining the interface for all protocol translators.
-*Methods:* `translate_to_target(canonical_msg: CanonicalMessage) -> Any`, `translate_from_source(target_msg: Any) -> CanonicalMessage`
+```python
+CanonicalMessage(
+    message_id="...",           # UUID-v4 string
+    source_agent_id="...",      # originating agent
+    conversation_id="...",      # hierarchical conversation ID
+    message_type="request",     # "request" | "response" | "state_update"
+    intent="analyze",           # "analyze" | "delegate" | "stream_result"
+    payload={...},              # intent-specific data (validated)
+    metadata={...},             # protocol_source, conversation_chain, vector_clock
+)
+```
 
-**`openclaw_gateway.cli.AgentBridgeCLI`**
-Command-Line Interface for running the gateway daemon.
-*Usage:* `agent_bridge run --config /path/to/config.yaml`
+**`openclaw_gateway.adapters.base.ProtocolAdapter`**
+Abstract base class for all protocol adapters. Requires `agent_id` and `protocol_name` at init.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `ingest` | `async (raw_message: bytes) -> CanonicalMessage` | Parse agent-native format to canonical |
+| `egress` | `async (canonical: CanonicalMessage) -> bytes` | Serialize canonical to agent-native format |
+
+Built-in adapters: `LangChainAdapter`, `AutoGPTAdapter`, `EventStreamAdapter`
+
+**`openclaw_gateway.router.ConversationRouter`**
+Message router with Tarjan's SCC cycle detection and topological sort.
+
+| Method | Description |
+|--------|-------------|
+| `register_route(conversation_id, primary_agent, fallback_agents, ...)` | Register static route |
+| `get_route(conversation_id, intent) -> RouteResult` | Lookup route (O(1)) |
+| `check_cycle(conversation_id, from_agent, to_agent) -> bool` | Detect circular delegations |
+| `topological_sort() -> List[str]` | Order agents by dependency |
+
+**`openclaw_gateway.cli`**
+Typer-based CLI. Usage: `openclaw-gateway --help`
 
 ## Research Background
 

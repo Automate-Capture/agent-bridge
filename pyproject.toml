@@ -26,18 +26,25 @@ classifiers = [
 dependencies = [
     "pydantic>=2.0",
     "typer>=0.9",
+    "aiohttp>=3.8",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+    "pytest-asyncio>=0.20",
     "pytest-cov",
     "ruff",
+    "mypy>=0.990",
 ]
 docs = [
     "mkdocs-material>=9.5",
     "pymdown-extensions>=10.0",
 ]
+
+[project.scripts]
+openclaw-gateway = "openclaw_gateway.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/Lumi-node/agent-bridge"
