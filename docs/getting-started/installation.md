@@ -9,7 +9,7 @@ pip install agent-bridge
 ## From Source
 
 ```bash
-git clone https://github.com/Lumi-node/agent-bridge.git
+git clone https://github.com/Automate-Capture/agent-bridge.git
 cd agent-bridge
 pip install -e ".[dev]"
 ```

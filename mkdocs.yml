@@ -1,10 +1,10 @@
 site_name: AgentBridge
-site_url: https://lumi-node.github.io/agent-bridge/
+site_url: https://automate-capture.github.io/agent-bridge/
 site_description: "Autonomous gateway for dynamic protocol adaptation and semantic routing between AI agents."
 site_author: Andrew Young
-repo_url: https://github.com/Lumi-node/agent-bridge
-repo_name: Lumi-node/agent-bridge
-edit_uri: edit/main/docs/
+repo_url: https://github.com/Automate-Capture/agent-bridge
+repo_name: Automate-Capture/agent-bridge
+edit_uri: edit/master/docs/
 
 theme:
   name: material
@@ -62,7 +62,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/Lumi-node/agent-bridge
+      link: https://github.com/Automate-Capture/agent-bridge
   generator: false
 
 extra_css:

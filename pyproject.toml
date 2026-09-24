@@ -47,10 +47,10 @@ docs = [
 openclaw-gateway = "openclaw_gateway.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/Lumi-node/agent-bridge"
-Documentation = "https://lumi-node.github.io/agent-bridge/"
-Repository = "https://github.com/Lumi-node/agent-bridge"
-Issues = "https://github.com/Lumi-node/agent-bridge/issues"
+Homepage = "https://github.com/Automate-Capture/agent-bridge"
+Documentation = "https://automate-capture.github.io/agent-bridge/"
+Repository = "https://github.com/Automate-Capture/agent-bridge"
+Issues = "https://github.com/Automate-Capture/agent-bridge/issues"
 
 [tool.ruff]
 line-length = 100

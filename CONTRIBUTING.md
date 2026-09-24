@@ -5,7 +5,7 @@ Thank you for your interest in contributing to AgentBridge!
 ## Development Setup
 
 ```bash
-git clone https://github.com/Lumi-node/agent-bridge.git
+git clone https://github.com/Automate-Capture/agent-bridge.git
 cd agent-bridge
 pip install -e ".[dev]"
 ```

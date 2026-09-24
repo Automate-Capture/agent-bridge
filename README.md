@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Lumi-node/agent-bridge"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License Badge"></a>
-  <a href="https://github.com/Lumi-node/agent-bridge"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python Version Badge"></a>
-  <a href="https://github.com/Lumi-node/agent-bridge"><img src="https://img.shields.io/badge/Tests-84%20files-green.svg" alt="Test Count Badge"></a>
+  <a href="https://github.com/Automate-Capture/agent-bridge"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License Badge"></a>
+  <a href="https://github.com/Automate-Capture/agent-bridge"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python Version Badge"></a>
+  <a href="https://github.com/Automate-Capture/agent-bridge"><img src="https://img.shields.io/badge/Tests-84%20files-green.svg" alt="Test Count Badge"></a>
 </p>
 
 ---
@@ -27,7 +27,7 @@ This system implements a robust MessageTranslationEngine utilizing Abstract Synt
 Install from source:
 
 ```bash
-git clone https://github.com/Lumi-node/agent-bridge.git
+git clone https://github.com/Automate-Capture/agent-bridge.git
 cd agent-bridge
 pip install -e ".[dev]"
 ```
